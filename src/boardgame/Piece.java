@@ -10,11 +10,9 @@ public abstract class Piece {
 		position = null;
 	}
 
-	
 	protected Board getBoard() {
 		return board;
 	}
-	
 	
 	public abstract boolean[][] possibleMoves();
 	
