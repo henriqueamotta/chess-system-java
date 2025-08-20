@@ -21,7 +21,7 @@ public class ChessMatch {
 	private Board board;
 	private boolean check;
 	private boolean checkMate;
-	private ChessPiece enPassantVunerable;
+	private ChessPiece enPassantVulnerable;
 	private ChessPiece promoted;
 
 	private List<Piece> piecesOnTheBoard = new ArrayList<>();
@@ -50,8 +50,8 @@ public class ChessMatch {
 		return checkMate;
 	}
 
-	public ChessPiece getEnPassantVunerable() {
-		return enPassantVunerable;
+	public ChessPiece getEnPassantVulnerable() {
+		return enPassantVulnerable;
 	}
 
 	public ChessPiece getPromoted() {
@@ -107,10 +107,10 @@ public class ChessMatch {
 
 		// #specialmove en passant
 		if (movedPiece instanceof Pawn && (target.getRow() == source.getRow() - 2 || target.getRow() == source.getRow() + 2)) {
-			enPassantVunerable = movedPiece;
+			enPassantVulnerable = movedPiece;
 		}
 		else {
-			enPassantVunerable = null;
+			enPassantVulnerable = null;
 		}
 
 		return (ChessPiece)capturedPiece;
@@ -221,7 +221,7 @@ public class ChessMatch {
 
 		// #specialmove en passant
 		if (p instanceof Pawn) {
-			if (source.getColumn() != target.getColumn() && capturedPiece == enPassantVunerable) {
+			if (source.getColumn() != target.getColumn() && capturedPiece == enPassantVulnerable) {
 				ChessPiece pawn = (ChessPiece)board.removePiece(target);
 				Position pawnPosition;
 				if (p.getColor() == Color.WHITE) {
