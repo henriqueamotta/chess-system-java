@@ -41,6 +41,13 @@ public class Main extends Application {
                     StackPane stackPane = new StackPane();
                     stackPane.getChildren().add(square);
                     gridPane.add(stackPane, col, row);
+
+                    // "Ouvinte" de clique a cada quadrado
+                    final int finalRow = row;
+                    final int finalCol = col;
+                    stackPane.setOnMouseClicked(event -> {
+                        handleSquareClick(finalCol, finalRow);
+                    });
                 }
             }
 
@@ -55,6 +62,12 @@ public class Main extends Application {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    // Método para lidar com os cliques nos quadrados
+    private void handleSquareClick(int col, int row) {
+        System.out.println("Clicou no quadrado: col=" + col + ", row=" + row);
+        // A lógica futura para selecionar e mover peças virá aqui
     }
 
     // Método para desenhar as peças
@@ -72,6 +85,10 @@ public class Main extends Application {
                     } else {
                         pieceLabel.setTextFill(Paint.valueOf("#000000"));
                     }
+
+                    // Previne que o Label da peça "roube" o clique do mouse.
+                    // Isso garante que o clique seja sempre registrado no quadrado (StackPane).
+                    pieceLabel.setMouseTransparent(true);
 
                     // Adiciona a peça (Label) ao StackPane na posição correta
                     StackPane stackPane = (StackPane) gridPane.getChildren().get(row * 8 + col);
