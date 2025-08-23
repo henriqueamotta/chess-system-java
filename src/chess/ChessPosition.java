@@ -19,6 +19,12 @@ public class ChessPosition {
 		return column;
 	}
 
+	public static ChessPosition fromMatrixPosition(int col, int row) {
+    	char columnChar = (char) ('a' + col);
+    	int rowNum = 8 - row;
+    	return new ChessPosition(columnChar, rowNum);
+	}
+
 	public int getRow() {
 		return row;
 	}

@@ -1,7 +1,9 @@
 package application;
 
+import chess.ChessException;
 import chess.ChessMatch;
 import chess.ChessPiece;
+import chess.ChessPosition;
 import chess.Color;
 import javafx.application.Application;
 import javafx.scene.Scene;
@@ -17,11 +19,15 @@ public class Main extends Application {
 
     // "Backend" com a lógica do jogo
     private ChessMatch chessMatch = new ChessMatch();
+    private GridPane gridPane = new GridPane(); // Tornando o gridPane um campo da classe
+
+    // Variáveis para guardar a origem e o destino da jogada
+    private ChessPosition source;
+    private ChessPosition target;
 
     @Override
     public void start(Stage primaryStage) {
         try {
-            GridPane gridPane = new GridPane();
             int squareSize = 80;
             int boardSize = 8;
 
@@ -37,25 +43,25 @@ public class Main extends Application {
                         square.setFill(Paint.valueOf("#B58863")); // Cor escura
                     }
                     
-                    // Cria um StackPane para colocar a peça sobre o quadrado
                     StackPane stackPane = new StackPane();
                     stackPane.getChildren().add(square);
                     gridPane.add(stackPane, col, row);
 
-                    // "Ouvinte" de clique a cada quadrado
+                    // Adiciona o "ouvinte" de clique a cada quadrado
                     final int finalRow = row;
                     final int finalCol = col;
                     stackPane.setOnMouseClicked(event -> {
-                        handleSquareClick(finalCol, finalRow);
+                        // Converte a coordenada da matriz (col, row) para ChessPosition
+                        handleSquareClick(ChessPosition.fromMatrixPosition(finalCol, finalRow));
                     });
                 }
             }
 
             // Desenha as peças na posição inicial
-            drawPieces(gridPane);
+            refreshBoard();
 
             Scene scene = new Scene(gridPane);
-            primaryStage.setTitle("Chess System with JavaFX"); // Nome na barra de título
+            primaryStage.setTitle("Chess System with JavaFX");
             primaryStage.setScene(scene);
             primaryStage.show();
 
@@ -64,40 +70,62 @@ public class Main extends Application {
         }
     }
 
-    // Método para lidar com os cliques nos quadrados
-    private void handleSquareClick(int col, int row) {
-        System.out.println("Clicou no quadrado: col=" + col + ", row=" + row);
-        // A lógica futura para selecionar e mover peças virá aqui
+    // Método para lidar com os cliques, recebendo ChessPosition
+    private void handleSquareClick(ChessPosition position) {
+        if (source == null) {
+            source = position;
+            // Futuramente, adicionar um destaque visual para a peça selecionada aqui
+        } else {
+            target = position;
+            try {
+                chessMatch.performChessMove(source, target);
+            }
+            catch (ChessException e) {
+                // Se o movimento for inválido, mostrar um alerta na tela
+                System.out.println("Erro: " + e.getMessage());
+            }
+
+            // Independentemente de o movimento ser válido ou não, o tabuleiro
+            // é atualizado e preparado para a próxima jogada.
+            refreshBoard();
+            source = null;
+            target = null;
+        }
     }
 
-    // Método para desenhar as peças
-    private void drawPieces(GridPane gridPane) {
+    // Renomeado de drawPieces para refreshBoard para refletir melhor sua função
+    private void refreshBoard() {
+        // Limpa todas as peças antigas do tabuleiro
+        for (int i = 0; i < 64; i++) {
+            StackPane stackPane = (StackPane) gridPane.getChildren().get(i);
+            if (stackPane.getChildren().size() > 1) {
+                stackPane.getChildren().remove(1);
+            }
+        }
+
+        // Desenha todas as peças na sua posição atual
         ChessPiece[][] pieces = chessMatch.getPieces();
         for (int row = 0; row < pieces.length; row++) {
             for (int col = 0; col < pieces[row].length; col++) {
                 if (pieces[row][col] != null) {
                     Label pieceLabel = new Label(pieces[row][col].toString());
-                    pieceLabel.setFont(new Font("Arial", 50)); // Aumenta o tamanho da fonte para a peça
+                    pieceLabel.setFont(new Font("Arial", 50));
                     
-                    // Define a cor da peça
                     if (pieces[row][col].getColor() == Color.WHITE) {
                         pieceLabel.setTextFill(Paint.valueOf("#FFFFFF"));
                     } else {
                         pieceLabel.setTextFill(Paint.valueOf("#000000"));
                     }
 
-                    // Previne que o Label da peça "roube" o clique do mouse.
-                    // Isso garante que o clique seja sempre registrado no quadrado (StackPane).
                     pieceLabel.setMouseTransparent(true);
 
-                    // Adiciona a peça (Label) ao StackPane na posição correta
                     StackPane stackPane = (StackPane) gridPane.getChildren().get(row * 8 + col);
                     stackPane.getChildren().add(pieceLabel);
                 }
             }
         }
     }
-
+    
     public static void main(String[] args) {
         launch(args);
     }
