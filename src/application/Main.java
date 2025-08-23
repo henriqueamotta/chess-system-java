@@ -6,6 +6,8 @@ import chess.ChessPiece;
 import chess.ChessPosition;
 import chess.Color;
 import javafx.application.Application;
+import javafx.collections.ObservableList;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
@@ -74,7 +76,14 @@ public class Main extends Application {
     private void handleSquareClick(ChessPosition position) {
         if (source == null) {
             source = position;
-            // Futuramente, adicionar um destaque visual para a peça selecionada aqui
+            try {
+                boolean[][] possibleMoves = chessMatch.possibleMoves(source);
+                highlightPossibleMoves(possibleMoves);
+            }
+            catch (ChessException e) {
+                // Se o primeiro clique for inválido (ex: peça do oponente), reinicia a jogada
+                source = null;
+            }
         } else {
             target = position;
             try {
@@ -95,11 +104,23 @@ public class Main extends Application {
 
     // Renomeado de drawPieces para refreshBoard para refletir melhor sua função
     private void refreshBoard() {
-        // Limpa todas as peças antigas do tabuleiro
-        for (int i = 0; i < 64; i++) {
-            StackPane stackPane = (StackPane) gridPane.getChildren().get(i);
-            if (stackPane.getChildren().size() > 1) {
-                stackPane.getChildren().remove(1);
+        // Limpa todas as peças antigas e destaques do tabuleiro
+        for (int row = 0; row < 8; row++) {
+            for (int col = 0; col < 8; col++) {
+                StackPane stackPane = (StackPane) getNodeByRowColumnIndex(row, col, gridPane);
+                Rectangle square = (Rectangle) stackPane.getChildren().get(0);
+
+                // Restaura a cor original
+                if ((row + col) % 2 == 0) {
+                    square.setFill(Paint.valueOf("#F0D9B5"));
+                } else {
+                    square.setFill(Paint.valueOf("#B58863"));
+                }
+                
+                // Remove a peça (se houver)
+                if (stackPane.getChildren().size() > 1) {
+                    stackPane.getChildren().remove(1);
+                }
             }
         }
 
@@ -118,12 +139,39 @@ public class Main extends Application {
                     }
 
                     pieceLabel.setMouseTransparent(true);
-
-                    StackPane stackPane = (StackPane) gridPane.getChildren().get(row * 8 + col);
+                    StackPane stackPane = (StackPane) getNodeByRowColumnIndex(row, col, gridPane);
                     stackPane.getChildren().add(pieceLabel);
                 }
             }
         }
+    }
+
+    // Método para destacar os movimentos possíveis
+    private void highlightPossibleMoves(boolean[][] possibleMoves) {
+        for (int row = 0; row < possibleMoves.length; row++) {
+            for (int col = 0; col < possibleMoves[row].length; col++) {
+                if (possibleMoves[row][col]) {
+                    StackPane stackPane = (StackPane) getNodeByRowColumnIndex(row, col, gridPane);
+                    Rectangle square = (Rectangle) stackPane.getChildren().get(0);
+                    square.setFill(Paint.valueOf("#6495ED")); // Cor de destaque (azul)
+                }
+            }
+        }
+    }
+    
+    // Método auxiliar para encontrar o nó (StackPane) correto na grade
+    private Node getNodeByRowColumnIndex(final int row, final int column, GridPane gridPane) {
+        Node result = null;
+        ObservableList<Node> childrens = gridPane.getChildren();
+        for (Node node : childrens) {
+            // GridPane.getRowIndex(node) pode retornar null, então checamos
+            if (GridPane.getRowIndex(node) != null && GridPane.getRowIndex(node) == row &&
+                GridPane.getColumnIndex(node) != null && GridPane.getColumnIndex(node) == column) {
+                result = node;
+                break;
+            }
+        }
+        return result;
     }
     
     public static void main(String[] args) {
