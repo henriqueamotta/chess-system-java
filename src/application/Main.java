@@ -1,5 +1,6 @@
 package application;
 
+import java.io.InputStream;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -9,6 +10,12 @@ import chess.ChessMatch;
 import chess.ChessPiece;
 import chess.ChessPosition;
 import chess.Color;
+import chess.pieces.Bishop;
+import chess.pieces.King;
+import chess.pieces.Knight;
+import chess.pieces.Pawn;
+import chess.pieces.Queen;
+import chess.pieces.Rook;
 import javafx.application.Application;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -44,9 +51,25 @@ public class Main extends Application {
     private ChessPosition source;
     private ChessPosition target;
 
+    // Variável para guardar a nossa fonte customizada
+    private Font chessFont;
+
     @Override
     public void start(Stage primaryStage) {
         try {
+            // Carrega a fonte customizada da forma mais robusta
+            try (InputStream fontStream = Main.class.getResourceAsStream("/fonts/NotoSansSymbols2-Regular.ttf")) {
+                if (fontStream == null) {
+                    throw new Exception("Arquivo da fonte não encontrado! Verifique a pasta 'resources/fonts'.");
+                }
+                // Define o tamanho padrão da fonte para as peças no tabuleiro
+                chessFont = Font.loadFont(fontStream, 50); 
+            } catch (Exception e) {
+                System.out.println("Erro ao carregar a fonte! Usando fonte padrão 'Arial'.");
+                e.printStackTrace();
+                chessFont = new Font("Arial", 50); // Uma fonte de fallback caso a original não seja encontrada
+            }
+
             BorderPane root = new BorderPane();
             root.setPadding(new Insets(10));
 
@@ -83,20 +106,20 @@ public class Main extends Application {
             VBox leftPanel = new VBox(10);
             leftPanel.setPadding(new Insets(10));
             leftPanel.setAlignment(Pos.TOP_CENTER);
-            leftPanel.setBackground(background); // NOVO: Aplica o fundo
+            leftPanel.setBackground(background);
             Label whiteCapturedTitle = new Label("Captured White Pieces:");
             whiteCapturedTitle.setFont(new Font("Arial", 16));
-            whiteCapturedTitle.setTextFill(Paint.valueOf("#FFFFFF")); // NOVO: Cor do texto
+            whiteCapturedTitle.setTextFill(Paint.valueOf("#FFFFFF"));
             blackCapturedPane.setPrefWrapLength(100);
             leftPanel.getChildren().addAll(whiteCapturedTitle, blackCapturedPane);
 
             VBox rightPanel = new VBox(10);
             rightPanel.setPadding(new Insets(10));
             rightPanel.setAlignment(Pos.TOP_CENTER);
-            rightPanel.setBackground(background); // NOVO: Aplica o fundo
+            rightPanel.setBackground(background);
             Label blackCapturedTitle = new Label("Captured Black Pieces:");
             blackCapturedTitle.setFont(new Font("Arial", 16));
-            blackCapturedTitle.setTextFill(Paint.valueOf("#FFFFFF")); // NOVO: Cor do texto
+            blackCapturedTitle.setTextFill(Paint.valueOf("#FFFFFF"));
             whiteCapturedPane.setPrefWrapLength(100);
             rightPanel.getChildren().addAll(blackCapturedTitle, whiteCapturedPane);
             
@@ -175,9 +198,10 @@ public class Main extends Application {
         for (int row = 0; row < pieces.length; row++) {
             for (int col = 0; col < pieces[row].length; col++) {
                 if (pieces[row][col] != null) {
-                    Label pieceLabel = new Label(pieces[row][col].toString());
-                    pieceLabel.setFont(new Font("Arial", 50));
+                    Label pieceLabel = new Label(getPieceChar(pieces[row][col]));
+                    pieceLabel.setFont(chessFont);
                     
+                    // Com uma fonte Unicode, definindo a cor do "molde" do caractere
                     if (pieces[row][col].getColor() == Color.WHITE) {
                         pieceLabel.setTextFill(Paint.valueOf("#FFFFFF"));
                     } else {
@@ -228,9 +252,9 @@ public class Main extends Application {
                 .collect(Collectors.toList());
         
         for(ChessPiece piece : whiteCaptured) {
-            Label pieceLabel = new Label(piece.toString());
-            pieceLabel.setFont(new Font("Arial", 30));
-            pieceLabel.setTextFill(Paint.valueOf("#FFFFFF")); // Cor branca no fundo escuro
+            Label pieceLabel = new Label(getPieceChar(piece));
+            pieceLabel.setFont(Font.font(chessFont.getFamily(), 30));
+            pieceLabel.setTextFill(Paint.valueOf("#FFFFFF"));
             blackCapturedPane.getChildren().add(pieceLabel);
         }
         
@@ -241,9 +265,9 @@ public class Main extends Application {
                 .collect(Collectors.toList());
         
         for(ChessPiece piece : blackCaptured) {
-            Label pieceLabel = new Label(piece.toString());
-            pieceLabel.setFont(new Font("Arial", 30));
-            pieceLabel.setTextFill(Paint.valueOf("#FFFFFF")); // NOVO: Cor branca no fundo escuro
+            Label pieceLabel = new Label(getPieceChar(piece));
+            pieceLabel.setFont(Font.font(chessFont.getFamily(), 30));
+            pieceLabel.setTextFill(Paint.valueOf("#FFFFFF"));
             whiteCapturedPane.getChildren().add(pieceLabel);
         }
     }
@@ -261,6 +285,29 @@ public class Main extends Application {
         }
     }
     
+    // Mapeamento para os caracteres padrão Unicode de xadrez
+    private String getPieceChar(ChessPiece piece) {
+        if (piece == null) return "";
+        
+        if (piece.getColor() == Color.WHITE) {
+            if (piece instanceof Rook) return "\u2656";   // ♖
+            if (piece instanceof Knight) return "\u2658"; // ♘
+            if (piece instanceof Bishop) return "\u2657"; // ♗
+            if (piece instanceof Queen) return "\u2655";  // ♕
+            if (piece instanceof King) return "\u2654";   // ♔
+            if (piece instanceof Pawn) return "\u2659";   // ♙
+        }
+        else { // Peças Pretas
+            if (piece instanceof Rook) return "\u265C";   // ♜
+            if (piece instanceof Knight) return "\u265E"; // ♞
+            if (piece instanceof Bishop) return "\u265D"; // ♝
+            if (piece instanceof Queen) return "\u265B";  // ♛
+            if (piece instanceof King) return "\u265A";   // ♚
+            if (piece instanceof Pawn) return "\u265F";   // ♟
+        }
+        return "";
+    }
+
     // Método auxiliar para encontrar o nó (StackPane) correto na grade
     private Node getNodeByRowColumnIndex(final int row, final int column, GridPane gridPane) {
         Node result = null;
