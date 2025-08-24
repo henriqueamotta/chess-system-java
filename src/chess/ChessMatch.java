@@ -367,4 +367,71 @@ public class ChessMatch {
         placeNewPiece('h', 7, new Pawn(board, Color.BLACK, this));
 	}
 
+/**
+ * Gera a string de notação FEN (Forsyth-Edwards Notation) para a posição atual do jogo.
+ * NOTA: A lógica de roque e o contador de semi-jogadas estão simplificados por enquanto.
+ * @return A string FEN representando o estado atual do jogo.
+ */
+	public String getFen() {
+    	StringBuilder sb = new StringBuilder();
+    
+    	// 1ª parte: Posição das peças
+    	sb.append(getFenPiecePlacement());
+    
+    	// 2ª parte: De quem é a vez
+    	sb.append(currentPlayer == Color.WHITE ? " w" : " b");
+
+    	// 3ª parte: Disponibilidade de roque (simplificado por agora)
+    	sb.append(" -");
+
+    	// 4ª parte: Quadrado de captura En Passant
+    	if (enPassantVulnerable != null) {
+        	sb.append(" ").append(enPassantVulnerable.getChessPosition().toString());
+    		} else {
+        	sb.append(" -");
+    	}
+    
+    	// 5ª parte: Contador de semi-jogadas para a regra dos 50 movimentos (simplificado)
+    	sb.append(" 0");
+    
+    	// 6ª parte: Número do lance atual
+    	sb.append(" ").append(turn);
+    
+    	return sb.toString();
+	}
+
+	/**
+	 * Método auxiliar que gera a primeira parte da string FEN, representando a posição das peças.
+	 * @return Uma string como "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR".
+	 */
+	private String getFenPiecePlacement() {
+    	StringBuilder sb = new StringBuilder();
+    	for (int r = 0; r < board.getRows(); r++) {
+        	int emptySquaresCounter = 0;
+        	for (int c = 0; c < board.getColumns(); c++) {
+            	ChessPiece piece = (ChessPiece) board.piece(r, c);
+            	if (piece == null) {
+               		emptySquaresCounter++;
+            	} else {
+                	if (emptySquaresCounter > 0) {
+                    	sb.append(emptySquaresCounter);
+                    	emptySquaresCounter = 0;
+                	}
+                	// Peças brancas em maiúsculas, peças pretas em minúsculas
+                	if (piece.getColor() == Color.WHITE) {
+                    	sb.append(piece.toString().toUpperCase());
+                	} else {
+                    	sb.append(piece.toString().toLowerCase());
+                	}
+            	}
+        	}
+        	if (emptySquaresCounter > 0) {
+            	sb.append(emptySquaresCounter);
+        	}
+        	if (r < board.getRows() - 1) {
+            	sb.append("/");
+        	}
+    	}
+    	return sb.toString();
+	}
 }

@@ -1,7 +1,9 @@
 package application;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import boardgame.Piece;
@@ -10,6 +12,7 @@ import chess.ChessMatch;
 import chess.ChessPiece;
 import chess.ChessPosition;
 import chess.Color;
+import chess.api.StockfishAPI;
 import chess.pieces.Bishop;
 import chess.pieces.King;
 import chess.pieces.Knight;
@@ -17,92 +20,84 @@ import chess.pieces.Pawn;
 import chess.pieces.Queen;
 import chess.pieces.Rook;
 import javafx.application.Application;
-import javafx.collections.ObservableList;
+import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ChoiceDialog;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.FlowPane;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Paint;
-import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
+import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 
 public class Main extends Application {
 
     // "Backend" com a lógica do jogo
     private ChessMatch chessMatch = new ChessMatch();
-    private GridPane gridPane = new GridPane(); // Tornando o gridPane um campo da classe
-    private Label statusLabel = new Label(); // Label para mostrar o status do jogo
-
-    // Painéis para exibir as peças capturadas
+    private Label statusLabel = new Label();
     private FlowPane whiteCapturedPane = new FlowPane(5, 5);
     private FlowPane blackCapturedPane = new FlowPane(5, 5);
-
-    // Variáveis para guardar a origem e o destino da jogada
     private ChessPosition source;
     private ChessPosition target;
-
-    // Variável para guardar a nossa fonte customizada
     private Font chessFont;
+    
+    // Canvas para desenhar o tabuleiro
+    private Canvas canvas;
+    private final int squareSize = 80;
+    private final int boardSize = 8;
+
+    private enum GameMode { HUMAN_VS_HUMAN, HUMAN_VS_AI }
+    private GameMode gameMode;
+    private int aiDifficulty = 10;
 
     @Override
     public void start(Stage primaryStage) {
+        
+        if (!selectGameMode()) {
+            Platform.exit();
+            return;
+        }
+
         try {
-            // Carrega a fonte customizada da forma mais robusta
             try (InputStream fontStream = Main.class.getResourceAsStream("/fonts/NotoSansSymbols2-Regular.ttf")) {
                 if (fontStream == null) {
                     throw new Exception("Arquivo da fonte não encontrado! Verifique a pasta 'resources/fonts'.");
                 }
-                // Define o tamanho padrão da fonte para as peças no tabuleiro
                 chessFont = Font.loadFont(fontStream, 50); 
             } catch (Exception e) {
                 System.out.println("Erro ao carregar a fonte! Usando fonte padrão 'Arial'.");
                 e.printStackTrace();
-                chessFont = new Font("Arial", 50); // Uma fonte de fallback caso a original não seja encontrada
+                chessFont = new Font("Arial", 50);
             }
 
             BorderPane root = new BorderPane();
             root.setPadding(new Insets(10));
+            
+            // Cria o Canvas com o tamanho do tabuleiro
+            canvas = new Canvas(squareSize * boardSize, squareSize * boardSize);
+            
+            // Adiciona o listener de clique diretamente no Canvas
+            canvas.setOnMouseClicked(event -> {
+                int col = (int) (event.getX() / squareSize);
+                int row = (int) (event.getY() / squareSize);
+                handleSquareClick(ChessPosition.fromMatrixPosition(col, row));
+            });
 
-            int squareSize = 80;
-            int boardSize = 8;
-
-            for (int row = 0; row < boardSize; row++) {
-                for (int col = 0; col < boardSize; col++) {
-                    Rectangle square = new Rectangle(squareSize, squareSize);
-
-                    if ((row + col) % 2 == 0) {
-                        square.setFill(Paint.valueOf("#F0D9B5"));
-                    } else {
-                        square.setFill(Paint.valueOf("#B58863"));
-                    }
-                    
-                    StackPane stackPane = new StackPane();
-                    stackPane.getChildren().add(square);
-                    gridPane.add(stackPane, col, row);
-                    
-                    final int finalRow = row;
-                    final int finalCol = col;
-                    stackPane.setOnMouseClicked(event -> {
-                        handleSquareClick(ChessPosition.fromMatrixPosition(finalCol, finalRow));
-                    });
-                }
-            }
-
-            // Define a cor de fundo grafite
             BackgroundFill backgroundFill = new BackgroundFill(Paint.valueOf("#333333"), CornerRadii.EMPTY, Insets.EMPTY);
             Background background = new Background(backgroundFill);
 
-            // --- Configuração dos painéis laterais de peças capturadas ---
             VBox leftPanel = new VBox(10);
             leftPanel.setPadding(new Insets(10));
             leftPanel.setAlignment(Pos.TOP_CENTER);
@@ -123,13 +118,11 @@ public class Main extends Application {
             whiteCapturedPane.setPrefWrapLength(100);
             rightPanel.getChildren().addAll(blackCapturedTitle, whiteCapturedPane);
             
-            // Configura o Label de status
             statusLabel.setFont(new Font("Arial", 24));
             statusLabel.setPrefHeight(40);
             statusLabel.setAlignment(Pos.CENTER);
 
-            // Adiciona os componentes ao BorderPane
-            root.setCenter(gridPane);
+            root.setCenter(canvas); // O Canvas agora fica no centro
             root.setBottom(statusLabel);
             root.setLeft(rightPanel);
             root.setRight(leftPanel);
@@ -147,81 +140,128 @@ public class Main extends Application {
         }
     }
 
-    // Método para lidar com os cliques, recebendo ChessPosition
     private void handleSquareClick(ChessPosition position) {
         if (source == null) {
             source = position;
             try {
                 boolean[][] possibleMoves = chessMatch.possibleMoves(source);
-                highlightPossibleMoves(possibleMoves);
+                refreshBoard(); // Redesenha o tabuleiro
+                highlightPossibleMoves(possibleMoves); // Desenha os destaques sobre o tabuleiro redesenhado
             }
             catch (ChessException e) {
                 source = null;
+                refreshBoard(); // Limpa qualquer destaque se o clique for inválido
             }
         } else {
             target = position;
             try {
                 chessMatch.performChessMove(source, target);
+                
+                if (gameMode == GameMode.HUMAN_VS_AI && !chessMatch.getCheckMate() && !chessMatch.getStalemate()) {
+                    makeAiMove();
+                }
+
             }
             catch (ChessException e) {
-                System.out.println("Erro: " + e.getMessage());
+                showErrorAlert(e.getMessage());
             }
 
-            refreshBoard();
             source = null;
             target = null;
+            refreshBoard();
         }
     }
 
-    // Renomeado de drawPieces para refreshBoard para refletir melhor sua função
-    private void refreshBoard() {
-        // Limpa todas as peças antigas e destaques do tabuleiro
-        for (int row = 0; row < 8; row++) {
-            for (int col = 0; col < 8; col++) {
-                StackPane stackPane = (StackPane) getNodeByRowColumnIndex(row, col, gridPane);
-                Rectangle square = (Rectangle) stackPane.getChildren().get(0);
+    private void makeAiMove() {
+        canvas.setDisable(true);
+        statusLabel.setText("AI is thinking...");
 
+        Task<String> task = new Task<String>() {
+            @Override
+            protected String call() throws Exception {
+                String fen = chessMatch.getFen();
+                return StockfishAPI.getBestMove(fen, aiDifficulty);
+            }
+        };
+
+        task.setOnSucceeded(e -> {
+            Platform.runLater(() -> {
+                String bestMove = task.getValue();
+                if (bestMove != null) {
+                    ChessPosition aiSource = new ChessPosition(bestMove.charAt(0), Character.getNumericValue(bestMove.charAt(1)));
+                    ChessPosition aiTarget = new ChessPosition(bestMove.charAt(2), Character.getNumericValue(bestMove.charAt(3)));
+                    chessMatch.performChessMove(aiSource, aiTarget);
+                }
+                refreshBoard();
+                canvas.setDisable(false);
+            });
+        });
+
+        task.setOnFailed(e -> {
+            Platform.runLater(() -> {
+                showErrorAlert("Could not get AI move. Check internet connection.");
+                refreshBoard();
+                canvas.setDisable(false);
+            });
+        });
+
+        new Thread(task).start();
+    }
+
+    // MÉTODO para usar o Canvas
+    private void refreshBoard() {
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+
+        // 1. Desenha os quadrados
+        for (int row = 0; row < boardSize; row++) {
+            for (int col = 0; col < boardSize; col++) {
                 if ((row + col) % 2 == 0) {
-                    square.setFill(Paint.valueOf("#F0D9B5"));
+                    gc.setFill(Paint.valueOf("#F0D9B5"));
                 } else {
-                    square.setFill(Paint.valueOf("#B58863"));
+                    gc.setFill(Paint.valueOf("#B58863"));
                 }
-                
-                if (stackPane.getChildren().size() > 1) {
-                    stackPane.getChildren().remove(1);
-                }
+                gc.fillRect(col * squareSize, row * squareSize, squareSize, squareSize);
             }
         }
 
-        // Desenha todas as peças na sua posição atual
+        // 2. Desenha as peças
         ChessPiece[][] pieces = chessMatch.getPieces();
+        gc.setFont(chessFont);
+        gc.setTextAlign(TextAlignment.CENTER);
+
         for (int row = 0; row < pieces.length; row++) {
             for (int col = 0; col < pieces[row].length; col++) {
                 if (pieces[row][col] != null) {
-                    Label pieceLabel = new Label(getPieceChar(pieces[row][col]));
-                    pieceLabel.setFont(chessFont);
-                    
-                    // Com uma fonte Unicode, definindo a cor do "molde" do caractere
                     if (pieces[row][col].getColor() == Color.WHITE) {
-                        pieceLabel.setTextFill(Paint.valueOf("#FFFFFF"));
+                        gc.setFill(Paint.valueOf("#FFFFFF"));
                     } else {
-                        pieceLabel.setTextFill(Paint.valueOf("#000000"));
+                        gc.setFill(Paint.valueOf("#000000"));
                     }
-
-                    pieceLabel.setMouseTransparent(true);
-                    StackPane stackPane = (StackPane) getNodeByRowColumnIndex(row, col, gridPane);
-                    stackPane.getChildren().add(pieceLabel);
+                    // Desenha a peça centralizada no quadrado
+                    gc.fillText(getPieceChar(pieces[row][col]), col * squareSize + squareSize / 2, row * squareSize + squareSize / 2 + 15);
                 }
             }
         }
-
-        // Atualiza o texto do Label de status ao final de cada atualização
+        
+        // 3. Atualiza os outros componentes da UI
         updateStatusLabel();
-        // Atualiza a exibição de peças capturadas
         updateCapturedPiecesDisplay();
     }
 
-    // Método para atualizar o texto do Label de status
+    // MÉTODO para usar o Canvas
+    private void highlightPossibleMoves(boolean[][] possibleMoves) {
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+        gc.setFill(Paint.valueOf("#6495ED80")); // Azul com 50% de transparência
+
+        for (int row = 0; row < possibleMoves.length; row++) {
+            for (int col = 0; col < possibleMoves[row].length; col++) {
+                if (possibleMoves[row][col]) {
+                    gc.fillRect(col * squareSize, row * squareSize, squareSize, squareSize);
+                }
+            }
+        }
+    }
+
     private void updateStatusLabel() {
         if (chessMatch.getCheckMate()) {
             statusLabel.setText("CHECKMATE! Winner: " + chessMatch.getCurrentPlayer());
@@ -238,14 +278,12 @@ public class Main extends Application {
         }
     }
     
-    // Método para exibir as peças capturadas
     private void updateCapturedPiecesDisplay() {
         whiteCapturedPane.getChildren().clear();
         blackCapturedPane.getChildren().clear();
         
         List<Piece> captured = chessMatch.getCapturedPieces();
 
-        // Peças BRANCAS (capturadas pelo jogador PRETO, ficam no painel 'blackCapturedPane')
         List<ChessPiece> whiteCaptured = captured.stream()
                 .filter(p -> ((ChessPiece)p).getColor() == Color.WHITE)
                 .map(p -> (ChessPiece)p)
@@ -258,7 +296,6 @@ public class Main extends Application {
             blackCapturedPane.getChildren().add(pieceLabel);
         }
         
-        // Peças PRETAS (capturadas pelo jogador BRANCO, ficam no painel 'whiteCapturedPane')
         List<ChessPiece> blackCaptured = captured.stream()
                 .filter(p -> ((ChessPiece)p).getColor() == Color.BLACK)
                 .map(p -> (ChessPiece)p)
@@ -271,55 +308,80 @@ public class Main extends Application {
             whiteCapturedPane.getChildren().add(pieceLabel);
         }
     }
-
-    // Método para destacar os movimentos possíveis
-    private void highlightPossibleMoves(boolean[][] possibleMoves) {
-        for (int row = 0; row < possibleMoves.length; row++) {
-            for (int col = 0; col < possibleMoves[row].length; col++) {
-                if (possibleMoves[row][col]) {
-                    StackPane stackPane = (StackPane) getNodeByRowColumnIndex(row, col, gridPane);
-                    Rectangle square = (Rectangle) stackPane.getChildren().get(0);
-                    square.setFill(Paint.valueOf("#6495ED"));
-                }
-            }
-        }
-    }
     
-    // Mapeamento para os caracteres padrão Unicode de xadrez
     private String getPieceChar(ChessPiece piece) {
         if (piece == null) return "";
         
         if (piece.getColor() == Color.WHITE) {
-            if (piece instanceof Rook) return "\u2656";   // ♖
-            if (piece instanceof Knight) return "\u2658"; // ♘
-            if (piece instanceof Bishop) return "\u2657"; // ♗
-            if (piece instanceof Queen) return "\u2655";  // ♕
-            if (piece instanceof King) return "\u2654";   // ♔
-            if (piece instanceof Pawn) return "\u2659";   // ♙
+            if (piece instanceof Rook) return "\u2656";
+            if (piece instanceof Knight) return "\u2658";
+            if (piece instanceof Bishop) return "\u2657";
+            if (piece instanceof Queen) return "\u2655";
+            if (piece instanceof King) return "\u2654";
+            if (piece instanceof Pawn) return "\u2659";
         }
-        else { // Peças Pretas
-            if (piece instanceof Rook) return "\u265C";   // ♜
-            if (piece instanceof Knight) return "\u265E"; // ♞
-            if (piece instanceof Bishop) return "\u265D"; // ♝
-            if (piece instanceof Queen) return "\u265B";  // ♛
-            if (piece instanceof King) return "\u265A";   // ♚
-            if (piece instanceof Pawn) return "\u265F";   // ♟
+        else {
+            if (piece instanceof Rook) return "\u265C";
+            if (piece instanceof Knight) return "\u265E";
+            if (piece instanceof Bishop) return "\u265D";
+            if (piece instanceof Queen) return "\u265B";
+            if (piece instanceof King) return "\u265A";
+            if (piece instanceof Pawn) return "\u265F";
         }
         return "";
     }
 
-    // Método auxiliar para encontrar o nó (StackPane) correto na grade
-    private Node getNodeByRowColumnIndex(final int row, final int column, GridPane gridPane) {
-        Node result = null;
-        ObservableList<Node> childrens = gridPane.getChildren();
-        for (Node node : childrens) {
-            if (GridPane.getRowIndex(node) != null && GridPane.getRowIndex(node) == row &&
-                GridPane.getColumnIndex(node) != null && GridPane.getColumnIndex(node) == column) {
-                result = node;
-                break;
+    private boolean selectGameMode() {
+        List<String> choices = new ArrayList<>();
+        choices.add("Human vs Human");
+        choices.add("Human vs AI");
+
+        ChoiceDialog<String> dialog = new ChoiceDialog<>("Human vs Human", choices);
+        dialog.setTitle("Chess Game");
+        dialog.setHeaderText("Choose your game mode");
+        dialog.setContentText("Mode:");
+
+        Optional<String> result = dialog.showAndWait();
+        if (result.isPresent()){
+            gameMode = result.get().equals("Human vs Human") ? GameMode.HUMAN_VS_HUMAN : GameMode.HUMAN_VS_AI;
+            if (gameMode == GameMode.HUMAN_VS_AI) {
+                return selectAiDifficulty();
             }
+            return true;
         }
-        return result;
+        return false;
+    }
+
+    private boolean selectAiDifficulty() {
+        List<String> difficulties = new ArrayList<>();
+        difficulties.add("Easy");
+        difficulties.add("Medium");
+        difficulties.add("Hard");
+        difficulties.add("Professional");
+
+        ChoiceDialog<String> dialog = new ChoiceDialog<>("Hard", difficulties);
+        dialog.setTitle("AI Difficulty");
+        dialog.setHeaderText("Choose the AI difficulty level");
+        dialog.setContentText("Level:");
+
+        Optional<String> result = dialog.showAndWait();
+        if (result.isPresent()){
+            String choice = result.get();
+            if (choice.equals("Easy")) aiDifficulty = 2;
+            if (choice.equals("Medium")) aiDifficulty = 5;
+            if (choice.equals("Hard")) aiDifficulty = 10;
+            if (choice.equals("Professional")) aiDifficulty = 15;
+            return true;
+        }
+        return false;
+    }
+    
+    private void showErrorAlert(String message) {
+        Alert alert = new Alert(AlertType.ERROR);
+        alert.setTitle("Invalid Move");
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
     
     public static void main(String[] args) {
