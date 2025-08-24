@@ -35,6 +35,10 @@ public class ChessMatch {
 		initialSetup();
 	}
 
+	public List<Piece> getCapturedPieces() {
+    return capturedPieces;
+	}
+
 	public int getTurn() {
 		return turn;
 	}
