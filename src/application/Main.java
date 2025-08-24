@@ -7,9 +7,11 @@ import chess.ChessPosition;
 import chess.Color;
 import javafx.application.Application;
 import javafx.collections.ObservableList;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Paint;
@@ -22,6 +24,7 @@ public class Main extends Application {
     // "Backend" com a lógica do jogo
     private ChessMatch chessMatch = new ChessMatch();
     private GridPane gridPane = new GridPane(); // Tornando o gridPane um campo da classe
+    private Label statusLabel = new Label(); // Label para mostrar o status do jogo
 
     // Variáveis para guardar a origem e o destino da jogada
     private ChessPosition source;
@@ -30,6 +33,9 @@ public class Main extends Application {
     @Override
     public void start(Stage primaryStage) {
         try {
+            // Usa BorderPane como o layout principal para organizar a tela
+            BorderPane root = new BorderPane();
+
             int squareSize = 80;
             int boardSize = 8;
 
@@ -59,10 +65,21 @@ public class Main extends Application {
                 }
             }
 
+            // Configura o Label de status
+            statusLabel.setFont(new Font("Arial", 24));
+            statusLabel.setPrefHeight(40); // Define uma altura preferencial
+            statusLabel.setAlignment(Pos.CENTER);
+
+            // Adiciona os componentes ao BorderPane
+            root.setCenter(gridPane); // O tabuleiro fica no centro
+            root.setBottom(statusLabel); // O Label de status fica embaixo
+            BorderPane.setAlignment(statusLabel, Pos.CENTER); // Centraliza o Label
+
             // Desenha as peças na posição inicial
             refreshBoard();
 
-            Scene scene = new Scene(gridPane);
+            // A cena agora usa o BorderPane como nó raiz
+            Scene scene = new Scene(root);
             primaryStage.setTitle("Chess System with JavaFX");
             primaryStage.setScene(scene);
             primaryStage.show();
@@ -143,6 +160,26 @@ public class Main extends Application {
                     stackPane.getChildren().add(pieceLabel);
                 }
             }
+        }
+
+        // Atualiza o texto do Label de status ao final de cada atualização
+        updateStatusLabel();
+    }
+
+    // Método para atualizar o texto do Label de status
+    private void updateStatusLabel() {
+        if (chessMatch.getCheckMate()) {
+            statusLabel.setText("CHECKMATE! Winner: " + chessMatch.getCurrentPlayer());
+        }
+        else if (chessMatch.getStalemate()) {
+            statusLabel.setText("STALEMATE!");
+        }
+        else {
+            String statusText = "Turn: " + chessMatch.getTurn() + " - Waiting Player: " + chessMatch.getCurrentPlayer();
+            if (chessMatch.getCheck()) {
+                statusText += " - CHECK!";
+            }
+            statusLabel.setText(statusText);
         }
     }
 
