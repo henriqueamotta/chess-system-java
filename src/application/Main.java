@@ -131,7 +131,7 @@ public class Main extends Application {
             refreshBoard();
 
             Scene scene = new Scene(root);
-            primaryStage.setTitle("Chess System with JavaFX");
+            primaryStage.setTitle("Chess System with JavaFX, by Henrique Motta");
             primaryStage.setScene(scene);
             primaryStage.show();
 
