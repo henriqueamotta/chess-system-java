@@ -14,25 +14,25 @@ This project is a modern desktop application developed in Java, bringing the cla
 
 * **Complete Chess Logic:** Fully implements all standard chess rules, including piece movements, captures, check, and checkmate.
 * **Special Moves:** All special moves are functional:
-    * **Castling:** Kingside and Queenside.
-    * **Pawn Promotion:** With player choice for the new piece.
-    * ***En Passant*** **Capture.**
-    * **Stalemate:** The game correctly identifies and ends in a stalemate draw.
+  * **Castling:** Kingside and Queenside.
+  * **Pawn Promotion:** With player choice for the new piece.
+  * ***En Passant*** **Capture.**
+  * **Stalemate:** The game correctly identifies and ends in a stalemate draw.
 * **Graphical User Interface (GUI):** A clean and interactive UI built with JavaFX, replacing the original command-line interface.
 * **Player vs. AI Mode:** Challenge a powerful AI opponent powered by the Stockfish engine via API.
 * **Adjustable AI Difficulty:** Players can choose between four difficulty levels (Easy, Medium, Hard, Professional), which adjusts the AI's calculation depth.
 * **Interactive Board:**
-    * Move pieces intuitively using mouse clicks.
-    * Get immediate visual feedback with highlighting of all possible moves for a selected piece.
+   * Move pieces intuitively using mouse clicks.
+   * Get immediate visual feedback with highlighting of all possible moves for a selected piece.
 * **Real-time Game Status:** The UI displays the current turn, the active player, check status, and announces checkmate or stalemate.
 * **Captured Pieces Display:** Side panels show all pieces captured by each player throughout the match.
 
 ## 🕰️ Project Timeline
 
--   **December 18, 2020:** Project initiated, focusing on Object-Oriented Programming principles.
--   **December 24, 2020:** [Version 1.0 (Terminal)](https://github.com/henriqueamotta/chess-system-java/tree/e13759977eb745291f076784e9fedc9ce700d711) completed. A fully functional chess game playable in the command line.
--   **August 20, 2025:** Project revival. The main goal shifted to developing a modern graphical interface and adding an AI opponent.
--   **August 24, 2025:** **Version 2.0 (GUI & AI)** completed, transforming the project into a full desktop application.
+- **December 18, 2020:** Project initiated, focusing on Object-Oriented Programming principles.
+- **December 24, 2020:** [Version 1.0 (Terminal)](https://github.com/henriqueamotta/chess-system-java/releases/tag/v1.0.0) completed. A fully functional chess game playable in the command line.
+- **August 20, 2025:** Project revival. The main goal shifted to developing a modern graphical interface and adding an AI opponent.
+- **August 24, 2025:** [**Version 2.0 (GUI & AI)**](https://github.com/henriqueamotta/chess-system-java/releases/tag/v2.0.0) completed, transforming the project into a full desktop application.
 
 ## 🛠️ Tech Stack
 
@@ -45,32 +45,44 @@ This project is a modern desktop application developed in Java, bringing the cla
 
 ## 🚀 Getting Started
 
-Follow these instructions to get a copy of the project up and running on your local machine.
+### 🎮 For Players (Easy Way)
 
-### Prerequisites
+The easiest way to play the game is to download the executable `.jar` file from our latest release.
+
+1.  Go to the [**Releases Page**](https://github.com/henriqueamotta/chess-system-java/releases).
+2.  Download the `chess-system-gui-v2.0.jar` from the **v2.0.0 (GUI & AI)** release.
+3.  You will need **Java (JDK 21 or higher)** installed on your machine ([download here](https://adoptium.net/)).
+4.  Double-click the `.jar` file (or run `java -jar chess-system-gui-v2.0.jar` from your terminal) to play!
+
+*To play the classic terminal version, you can download `chess-system-terminal-v1.0.jar` from the **v1.0.0** release.*
+
+### 👨‍💻 For Developers (Building from Source)
+
+If you want to run the code, modify it, or contribute, follow these instructions to get a copy of the project up and running on your local machine.
+
+#### Prerequisites
 
 You will need the following tools installed on your system:
 * **Java Development Kit (JDK) 21 or higher:** [Adoptium Temurin](https://adoptium.net/).
 * **JavaFX SDK 21 or higher:** [Gluon JavaFX](https://gluonhq.com/products/javafx/).
 
-### Installation & Execution Guide
+#### Installation & Execution Guide
 
-1.  **Clone the repository:**
-    ```sh
-    git clone [https://github.com/henriqueamotta/chess-system-java.git](https://github.com/henriqueamotta/chess-system-java.git)
-    cd chess-system-java
-    ```
+1.  **Clone the repository:**
+   ```sh
+   git clone https://github.com/henriqueamotta/chess-system-java.git
+   cd chess-system-java
+   ```
 
-2.  **Open the project in your IDE** (e.g., VS Code, IntelliJ, Eclipse).
+2.  **Open the project in your IDE** (e.g., VS Code, IntelliJ, Eclipse).
 
-3.  **Configure the JavaFX SDK:**
-    You must configure your IDE to recognize the JavaFX libraries. The project includes configuration files (`.classpath` and `.vscode/settings.json`) that are pre-configured for an environment where the JavaFX SDK is located at `C:\Java\javafx-sdk-21.0.8`. If your path is different, you will need to update it in these files.
+3.  **Configure the JavaFX SDK:** You must configure your IDE to recognize the JavaFX libraries. The project includes configuration files (`.classpath` and `.vscode/settings.json`) that are pre-configured for an environment where the JavaFX SDK is located at `C:\Java\javafx-sdk-21.0.8`. If your path is different, you will need to update it in these files.
 
-4.  **Run the application:**
-    * Navigate to the `src/application/Main.java` class and execute it.
-    * A dialog box will appear to choose the game mode (Human vs. Human or Human vs. AI).
-    * If you choose to play against the AI, another dialog will prompt you to select the difficulty level.
-    * Enjoy the game!
+4.  **Run the application:**
+* Navigate to the `src/application/Main.java` class and execute it.
+* A dialog box will appear to choose the game mode (Human vs. Human or Human vs. AI).
+* If you choose to play against the AI, another dialog will prompt you to select the difficulty level.
+* Enjoy the game!
 
 ---
 
@@ -99,25 +111,25 @@ Este projeto é uma aplicação desktop moderna desenvolvida em Java, que dá vi
 
 * **Lógica de Xadrez Completa:** Implementa todas as regras padrão do xadrez, incluindo movimento de peças, capturas, xeque e xeque-mate.
 * **Movimentos Especiais:** Todos os movimentos especiais estão funcionais:
-    * **Roque:** Pequeno e Grande.
-    * **Promoção de Peão:** Com escolha da nova peça pelo jogador.
-    * **Captura *En Passant***.
-    * **Afogamento (Stalemate):** O jogo identifica e termina corretamente em caso de empate por afogamento.
+   * **Roque:** Pequeno e Grande.
+   * **Promoção de Peão:** Com escolha da nova peça pelo jogador.
+   * **Captura *En Passant***.
+   * **Afogamento (Stalemate):** O jogo identifica e termina corretamente em caso de empate por afogamento.
 * **Interface Gráfica (GUI):** Uma interface limpa e interativa construída com JavaFX, substituindo a interface de linha de comando original.
 * **Modo de Jogo vs. IA:** Desafie um oponente de IA poderoso, utilizando o motor Stockfish através de uma API.
 * **Níveis de Dificuldade da IA:** Os jogadores podem escolher entre quatro níveis de dificuldade (Fácil, Médio, Difícil, Profissional), que ajustam a profundidade de cálculo da IA.
 * **Tabuleiro Interativo:**
-    * Mova as peças de forma intuitiva com cliques do mouse.
-    * Receba feedback visual imediato com o destaque de todos os movimentos possíveis para a peça selecionada.
+   * Mova as peças de forma intuitiva com cliques do mouse.
+   * Receba feedback visual imediato com o destaque de todos os movimentos possíveis para a peça selecionada.
 * **Status do Jogo em Tempo Real:** A interface exibe o turno atual, o jogador da vez, o status de Xeque e anuncia o Xeque-Mate ou Empate.
 * **Exibição de Peças Capturadas:** Painéis laterais mostram todas as peças capturadas por cada jogador durante a partida.
 
 ## 🕰️ Linha do Tempo do Projeto
 
--   **18 de Dezembro de 2020:** Início do projeto, com foco nos princípios de Programação Orientada a Objetos.
--   **24 de Dezembro de 2020:** [Versão 1.0 (Terminal)](https://github.com/henriqueamotta/chess-system-java/commit/ea92b067d4af2664e67a026b1544fd1c4ca63522) finalizada. Um jogo de xadrez completamente funcional, jogável pela linha de comando.
--   **20 de Agosto de 2025:** Retomada do projeto. O objetivo principal mudou para o desenvolvimento de uma interface gráfica moderna e a adição de um oponente de IA.
--   **24 de Agosto de 2025:** **Versão 2.0 (GUI & IA)** finalizada, transformando o projeto em uma aplicação desktop completa.
+- **18 de Dezembro de 2020:** Início do projeto, com foco nos princípios de Programação Orientada a Objetos.
+- **24 de Dezembro de 2020:** [Versão 1.0 (Terminal)](https://github.com/henriqueamotta/chess-system-java/releases/tag/v1.0.0) finalizada. Um jogo de xadrez completamente funcional, jogável pela linha de comando.
+- **20 de Agosto de 2025:** Retomada do projeto. O objetivo principal mudou para o desenvolvimento de uma interface gráfica moderna e a adição de um oponente de IA.
+- **24 de Agosto de 2025:** [**Versão 2.0 (GUI & IA)**](https://github.com/henriqueamotta/chess-system-java/releases/tag/v2.0.0) finalizada, transformando o projeto em uma aplicação desktop completa.
 
 ## 🛠️ Tecnologias Utilizadas
 
@@ -130,36 +142,47 @@ Este projeto é uma aplicação desktop moderna desenvolvida em Java, que dá vi
 
 ## 🚀 Começando
 
-Siga estas instruções para obter uma cópia do projeto e executá-lo em sua máquina local.
+### 🎮 Para Jogadores (Modo Fácil)
 
-### Pré-requisitos
+A forma mais fácil de jogar é baixando o arquivo `.jar` executável do nosso último release.
+
+1.  Vá para a [**Página de Releases**](https://github.com/henriqueamotta/chess-system-java/releases).
+2.  Baixe o arquivo `chess-system-gui-v2.0.jar` do release **v2.0.0 (GUI & AI)**.
+3.  Você precisará ter o **Java (JDK 21 ou superior)** instalado na sua máquina ([baixe aqui](https://adoptium.net/)).
+4.  Dê um duplo clique no arquivo `.jar` (ou execute `java -jar chess-system-gui-v2.0.jar` no seu terminal) para jogar!
+
+*Para jogar a versão clássica de terminal, você pode baixar o `chess-system-terminal-v1.0.jar` do release **v1.0.0**.*
+
+### 👨‍💻 Para Desenvolvedores (Compilando do Zero)
+
+Se você deseja executar o código, modificá-lo ou contribuir, siga estas instruções para obter uma cópia do projeto e executá-lo em sua máquina local.
+
+#### Pré-requisitos
 
 Você precisará ter as seguintes ferramentas instaladas em seu sistema:
 * **Java Development Kit (JDK) 21 ou superior:** [Adoptium Temurin](https://adoptium.net/).
 * **JavaFX SDK 21 ou superior:** [Gluon JavaFX](https://gluonhq.com/products/javafx/).
 
-### Guia de Instalação e Execução
+#### Guia de Instalação e Execução
 
-1.  **Clone o repositório:**
-    ```sh
-    git clone [https://github.com/henriqueamotta/chess-system-java.git](https://github.com/henriqueamotta/chess-system-java.git)
-    cd chess-system-java
-    ```
+1.  **Clone o repositório:**
+   ```sh
+   git clone https://github.com/henriqueamotta/chess-system-java.git
+   cd chess-system-java
+   ```
 
-2.  **Abra o projeto na sua IDE** (ex: VS Code, IntelliJ, Eclipse).
+2.  **Abra o projeto na sua IDE** (ex: VS Code, IntelliJ, Eclipse).
 
-3.  **Configure o JavaFX SDK:**
-    Você deve configurar sua IDE para reconhecer as bibliotecas do JavaFX. O projeto inclui arquivos de configuração (`.classpath` e `.vscode/settings.json`) pré-configurados para um ambiente onde o SDK do JavaFX está localizado em `C:\Java\javafx-sdk-21.0.8`. Se o seu caminho for diferente, você precisará atualizá-lo nesses arquivos.
+3.  **Configure o JavaFX SDK:** Você deve configurar sua IDE para reconhecer as bibliotecas do JavaFX. O projeto inclui arquivos de configuração (`.classpath` e `.vscode/settings.json`) pré-configurados para um ambiente onde o SDK do JavaFX está localizado em `C:\Java\javafx-sdk-21.0.8`. Se o seu caminho for diferente, você precisará atualizá-lo nesses arquivos.
 
-4.  **Execute a aplicação:**
-    * Navegue até a classe `src/application/Main.java` e execute-a.
-    * Uma caixa de diálogo aparecerá para escolher o modo de jogo (Humano vs. Humano ou Humano vs. IA).
-    * Se escolher jogar contra a IA, outra caixa de diálogo pedirá para selecionar o nível de dificuldade.
-    * Aproveite o jogo!
+4.  **Execute a aplicação:**
+* Navegue até a classe `src/application/Main.java` e execute-a.
+* Uma caixa de diálogo aparecerá para escolher o modo de jogo (Humano vs. Humano ou Humano vs. IA).
+* Se escolher jogar contra a IA, outra caixa de diálogo pedirá para selecionar o nível de dificuldade.
+* Aproveite o jogo!
 
 ---
 
 ## ✒️ Autor
 
 * **Henrique Motta** - [GitHub](https://github.com/henriqueamotta) | [LinkedIn](https://linkedin.com/in/henriqueamotta/)
-
